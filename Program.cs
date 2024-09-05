@@ -18,6 +18,8 @@ builder.Services.AddOptions<GameConfig>().BindConfiguration("GameConfig");
 
 var app = builder.Build();
 
+app.UseStaticFiles();
+
 app.MapGet(
     "/similarity",
     async (

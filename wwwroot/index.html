@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WordSimilarity</title>
+    <style>
+        html,
+        body {
+            display: flex;
+            overflow: hidden;
+            width: 100vw;
+            height: 100vh;
+            margin: 0px;
+            position: relative;
+            justify-content: center;
+            align-items: center;
+            background-color: #bada55;
+            font-family: system-ui;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        input,
+        button {
+            text-transform: lowercase;
+            z-index: 10;
+            border: 1px #000000 solid;
+            padding: 0.25em 0.5em;
+            font-size: 1.5em;
+        }
+
+        input {
+            border-inline-end: none;
+            border-start-start-radius: 2px;
+            border-end-start-radius: 2px;
+            outline: none;
+        }
+
+        button {
+            border-start-end-radius: 2px;
+            border-end-end-radius: 2px;
+        }
+
+        span {
+            position: absolute;
+            transform: translate(-50%, -50%);
+            font-size: 1.5em;
+        }
+    </style>
+</head>
+
+<body>
+    <input placeholder="Guess a word">
+    <button>Guess</button>
+    <script>
+        const input = document.querySelector("input");
+        const button = document.querySelector("button");
+
+        input.addEventListener("keydown", (event) => {
+            if (event.key === "Enter") {
+                guess();
+            }
+        }, true);
+        button.addEventListener("click", () => {
+            guess();
+        });
+
+        async function guess() {
+            const word = input.value.trim().toLowerCase();
+            if (word === "") {
+                return;
+            }
+            input.value = "";
+            const response = await fetch(`/similarity?word=${word}`);
+            const similarity = await response.json();
+
+            const span = document.createElement("span");
+            span.textContent = word;
+            span.style.left = `${Math.random() * 90 + 5}vw`;
+            span.style.top = `${(1 - similarity) * 90 + 5}vh`;
+            document.body.appendChild(span);
+            
+            if (similarity >= 0.99) {
+                alert("Correct!");
+            }
+        }
+    </script>
+</body>
+
+</html>
