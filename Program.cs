@@ -1,28 +1,30 @@
-﻿using System;
-using System.Numerics.Tensors;
-using OpenAI.Embeddings;
+﻿using System.Reflection;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Configuration;
+using WordSimilarity;
 
-Console.WriteLine("\x1b[2J");
+var builder = WebApplication.CreateBuilder(args);
 
-var client = new EmbeddingClient(
-    "text-embedding-3-large",
-    Environment.GetEnvironmentVariable("OPENAI_API_KEY")
-        ?? throw new Exception("Missing OPENAI_API_KEY environment variable")
+builder.Configuration.AddUserSecrets(Assembly.GetEntryAssembly()!);
+
+builder.Services.AddOpenAIEmbeddingClient();
+builder.Services.AddEmbeddingService();
+
+var app = builder.Build();
+
+app.MapGet(
+    "/similarity",
+    async (
+        [FromServices] EmbeddingService service,
+        [FromQuery] string word1,
+        [FromQuery] string word2
+    ) =>
+    {
+        var similarity = await service.GetSimilarityAsync(word1, word2);
+        return Results.Json(similarity);
+    }
 );
 
-var secretWord = args[0].Trim().ToLowerInvariant();
-var secretWordVector = client.GenerateEmbedding(secretWord).Value.Vector;
-
-while (true)
-{
-    Console.Write("Enter a word to guess: ");
-    var guessWord = Console.ReadLine()!.Trim().ToLowerInvariant();
-    if (guessWord == secretWord)
-    {
-        Console.WriteLine("Correct!");
-        break;
-    }
-    var guessWordVector = client.GenerateEmbedding(guessWord).Value.Vector;
-    var similarity = TensorPrimitives.CosineSimilarity(secretWordVector.Span, guessWordVector.Span);
-    Console.WriteLine($"Similarity: {similarity}");
-}
+app.Run();
